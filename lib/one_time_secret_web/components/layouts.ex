@@ -38,35 +38,42 @@ defmodule OneTimeSecretWeb.Layouts do
     <div class="flex flex-col min-h-screen">
       <header class="border-b border-base-300 bg-base-100" role="banner">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <nav aria-label="Main navigation">
-            <a href="/" class="inline-flex items-center gap-3 hover:opacity-80 transition-opacity">
-              <svg
-                width="32"
-                height="32"
-                viewBox="0 0 100 100"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                aria-hidden="true"
-              >
-                <circle cx="50" cy="50" r="45" fill="currentColor" class="text-primary" />
-                <path
-                  d="M50 20 L65 40 L50 35 L35 40 Z"
-                  fill="currentColor"
-                  class="text-primary-content"
-                />
-                <rect
-                  x="45"
-                  y="40"
-                  width="10"
-                  height="40"
-                  fill="currentColor"
-                  class="text-primary-content"
-                />
-                <circle cx="50" cy="65" r="8" fill="currentColor" class="text-base-100" />
-              </svg>
-              <span class="text-xl font-semibold text-base-content">OneTimeSecret</span>
-            </a>
-          </nav>
+          <div class="flex items-center justify-between">
+            <nav aria-label="Main navigation">
+              <a href="/" class="inline-flex items-center gap-3 hover:opacity-80 transition-opacity">
+                <svg
+                  width="32"
+                  height="32"
+                  viewBox="0 0 100 100"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  aria-hidden="true"
+                >
+                  <circle cx="50" cy="50" r="45" fill="currentColor" class="text-primary" />
+                  <path
+                    d="M50 20 L65 40 L50 35 L35 40 Z"
+                    fill="currentColor"
+                    class="text-primary-content"
+                  />
+                  <rect
+                    x="45"
+                    y="40"
+                    width="10"
+                    height="40"
+                    fill="currentColor"
+                    class="text-primary-content"
+                  />
+                  <circle cx="50" cy="65" r="8" fill="currentColor" class="text-base-100" />
+                </svg>
+                <span class="text-xl font-semibold text-base-content">OneTimeSecret</span>
+              </a>
+            </nav>
+
+            <div class="flex items-center gap-4">
+              <a href="/login" class="btn btn-ghost btn-sm">Log In</a>
+              <a href="/register" class="btn btn-primary btn-sm">Sign Up</a>
+            </div>
+          </div>
         </div>
       </header>
 
