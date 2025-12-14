@@ -3,33 +3,18 @@ defmodule OneTimeSecretWeb.SessionLive.New do
 
   alias OneTimeSecret.Accounts
   alias OneTimeSecret.Sessions
-  alias OneTimeSecretWeb.Plugs.SessionAuth
 
   @impl true
   def mount(_params, _session, socket) do
     form = to_form(%{"email" => "", "password" => ""})
-
-    # Store connection metadata for session creation
-    user_agent = get_connect_info(socket, :user_agent)
-    peer_data = get_connect_info(socket, :peer_data)
-
-    ip_address =
-      case peer_data do
-        %{address: address} -> ip_to_string(address)
-        _ -> nil
-      end
 
     {:ok,
      socket
      |> assign(:page_title, "Log In")
      |> assign(:form, form)
      |> assign(:error, nil)
-     |> assign(:authenticating, false)
-     |> assign(:ip_address, ip_address)
-     |> assign(:user_agent, user_agent)}
+     |> assign(:logging_in, false)}
   end
-
-  # <-- The missing 'end' goes here
 
   @impl true
   def handle_event("validate", %{"login" => login_params}, socket) do
@@ -39,45 +24,32 @@ defmodule OneTimeSecretWeb.SessionLive.New do
 
   @impl true
   def handle_event("submit", %{"login" => %{"email" => email, "password" => password}}, socket) do
-    socket = assign(socket, authenticating: true)
+    socket = assign(socket, logging_in: true)
 
     case Accounts.authenticate_account(email, password) do
       {:ok, account} ->
-        # Get client metadata for session
-
-        session_attrs = %{
-          ip_address: socket.assigns.ip_address,
-          user_agent: socket.assigns.user_agent
-        }
-
-        case Sessions.create_session(account, session_attrs) do
+        case Sessions.create_session(account) do
           {:ok, session} ->
-            {:noreply,
-             socket
-             |> put_flash(:info, "Welcome back, #{account.email}!")
-             |> SessionAuth.put_session_cookie(session.id)
-             |> push_navigate(to: ~p"/dashboard")}
+            # Redirect to controller that sets cookie and redirects to dashboard
+            {:noreply, push_navigate(socket, to: ~p"/session/activate?id=#{session.id}")}
 
           {:error, :no_organizations} ->
             {:noreply,
              socket
-             |> assign(:authenticating, false)
-             |> assign(
-               :error,
-               "Your account has no organizations. Please contact support."
-             )}
+             |> assign(:logging_in, false)
+             |> assign(:error, "Your account has no organizations. Please contact support.")}
 
-          {:error, _changeset} ->
+          {:error, _reason} ->
             {:noreply,
              socket
-             |> assign(:authenticating, false)
+             |> assign(:logging_in, false)
              |> assign(:error, "Failed to create session. Please try again.")}
         end
 
       {:error, :invalid_credentials} ->
         {:noreply,
          socket
-         |> assign(:authenticating, false)
+         |> assign(:logging_in, false)
          |> assign(:error, "Invalid email or password")}
     end
   end
@@ -88,9 +60,9 @@ defmodule OneTimeSecretWeb.SessionLive.New do
     <Layouts.app flash={@flash}>
       <div class="mx-auto max-w-md">
         <div class="mb-8 text-center">
-          <h1 class="text-4xl font-bold text-base-content mb-2">Log In</h1>
+          <h1 class="text-4xl font-bold text-base-content mb-2">Welcome Back</h1>
           <p class="text-base-content/70">
-            Sign in to access your workspace
+            Log in to access your secure workspace
           </p>
         </div>
 
@@ -148,11 +120,11 @@ defmodule OneTimeSecretWeb.SessionLive.New do
                   </div>
                 <% end %>
 
-                <button type="submit" class="btn btn-primary w-full" disabled={@authenticating}>
-                  <%= if @authenticating do %>
-                    <span class="loading loading-spinner"></span> Signing in...
+                <button type="submit" class="btn btn-primary w-full" disabled={@logging_in}>
+                  <%= if @logging_in do %>
+                    <span class="loading loading-spinner"></span> Logging in...
                   <% else %>
-                    Sign In
+                    Log In
                   <% end %>
                 </button>
               </div>
@@ -169,13 +141,4 @@ defmodule OneTimeSecretWeb.SessionLive.New do
     </Layouts.app>
     """
   end
-
-  # Private Helpers
-
-  defp ip_to_string({a, b, c, d}), do: "#{a}.#{b}.#{c}.#{d}"
-
-  defp ip_to_string({a, b, c, d, e, f, g, h}),
-    do: "#{a}:#{b}:#{c}:#{d}:#{e}:#{f}:#{g}:#{h}"
-
-  defp ip_to_string(_), do: nil
 end
