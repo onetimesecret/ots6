@@ -12,8 +12,8 @@ defmodule OneTimeSecretWeb.Router do
 
   pipeline :authenticated do
     plug :browser
-    plug OneTimeSecretWeb.Plugs.SessionAuth, :fetch_current_session
-    plug OneTimeSecretWeb.Plugs.SessionAuth, :require_authenticated
+    plug :fetch_current_session
+    plug :require_authenticated
   end
 
   pipeline :api do
