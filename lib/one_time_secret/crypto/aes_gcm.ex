@@ -46,9 +46,9 @@ defmodule OneTimeSecret.Crypto.AesGcm do
 
   """
   @spec encrypt(binary(), binary(), binary()) :: {:ok, map()} | {:error, term()}
-  def encrypt(plaintext, key, aad \\ "")
+  def encrypt(plaintext, key, aad)
 
-  def encrypt(plaintext, key, aad \\ "")
+  def encrypt(plaintext, key, aad)
       when is_binary(plaintext) and is_binary(key) and byte_size(key) == 32 do
     nonce = :crypto.strong_rand_bytes(@nonce_size)
 
@@ -92,9 +92,9 @@ defmodule OneTimeSecret.Crypto.AesGcm do
 
   """
   @spec decrypt(map(), binary(), binary()) :: {:ok, binary()} | {:error, term()}
-  def decrypt(bundle, key, aad \\ "")
+  def decrypt(bundle, key, aad)
 
-  def decrypt(bundle, key, aad \\ "")
+  def decrypt(bundle, key, aad)
       when is_map(bundle) and is_binary(key) and byte_size(key) == 32 do
     with {:ok, nonce} <- extract_field(bundle, :nonce),
          {:ok, ciphertext} <- extract_field(bundle, :ciphertext),
