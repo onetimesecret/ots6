@@ -109,7 +109,7 @@ defmodule OneTimeSecret.Secrets.SecretStore do
 
     # Store hash and set TTL
     with {:ok, _} <- Redis.command(["HSET", redis_key | fields]),
-         {:ok, _} <- Redis.command(["EXPIRE", redis_key, ttl_seconds]) do
+         {:ok, _} <- Redis.command(["EXPIRE", redis_key, to_string(ttl_seconds)]) do
       {:ok, key}
     end
   end
@@ -224,7 +224,7 @@ defmodule OneTimeSecret.Secrets.SecretStore do
   @spec add_to_timeline(String.t(), String.t()) :: {:ok, integer()} | {:error, term()}
   def add_to_timeline(org_id, key) when is_binary(org_id) and is_binary(key) do
     timeline_key = @timeline_prefix <> org_id
-    score = DateTime.utc_now() |> DateTime.to_unix()
+    score = DateTime.utc_now() |> DateTime.to_unix() |> to_string()
 
     Redis.command(["ZADD", timeline_key, score, key])
   end
@@ -252,7 +252,7 @@ defmodule OneTimeSecret.Secrets.SecretStore do
     timeline_key = @timeline_prefix <> org_id
     stop = cursor + limit - 1
 
-    case Redis.command(["ZREVRANGE", timeline_key, cursor, stop]) do
+    case Redis.command(["ZREVRANGE", timeline_key, to_string(cursor), to_string(stop)]) do
       {:ok, keys} -> {:ok, keys}
       {:error, reason} -> {:error, reason}
     end

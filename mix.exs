@@ -11,7 +11,8 @@ defmodule OneTimeSecret.MixProject do
       aliases: aliases(),
       deps: deps(),
       compilers: [:phoenix_live_view] ++ Mix.compilers(),
-      listeners: [Phoenix.CodeReloader]
+      listeners: [Phoenix.CodeReloader],
+      dialyzer: dialyzer()
     ]
   end
 
@@ -28,6 +29,14 @@ defmodule OneTimeSecret.MixProject do
   # Specifies which paths to compile per environment.
   defp elixirc_paths(:test), do: ["lib", "test/support"]
   defp elixirc_paths(_), do: ["lib"]
+
+  # Dialyzer configuration for static analysis
+  defp dialyzer do
+    [
+      plt_file: {:no_warn, "priv/plts/dialyzer.plt"},
+      plt_add_apps: [:mix, :ex_unit]
+    ]
+  end
 
   # Specifies your project dependencies.
   #
@@ -60,7 +69,12 @@ defmodule OneTimeSecret.MixProject do
       {:dns_cluster, "~> 0.2.0"},
       {:bandit, "~> 1.5"},
       {:redix, "~> 1.5"},
-      {:argon2_elixir, "~> 4.0"}
+      {:argon2_elixir, "~> 4.0"},
+
+      # Dev/test tools
+      {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
+      {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
+      {:sobelow, "~> 0.13", only: [:dev, :test], runtime: false}
     ]
   end
 

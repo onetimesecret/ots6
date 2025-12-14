@@ -1,0 +1,211 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+env:
+  MIX_ENV: test
+  # Disable Swoosh API client in tests
+  SWOOSH_API_CLIENT: false
+
+jobs:
+  test:
+    name: Test (Elixir ${{ matrix.elixir }} / OTP ${{ matrix.otp }})
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Primary version - matches project requirements
+          - elixir: "1.17.3"
+            otp: "27.1"
+          # Minimum supported version
+          - elixir: "1.15.8"
+            otp: "26.2"
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Elixir
+        uses: erlef/setup-beam@v1
+        with:
+          elixir-version: ${{ matrix.elixir }}
+          otp-version: ${{ matrix.otp }}
+
+      - name: Cache deps
+        uses: actions/cache@v4
+        id: cache-deps
+        with:
+          path: deps
+          key: ${{ runner.os }}-mix-deps-${{ matrix.elixir }}-${{ matrix.otp }}-${{ hashFiles('**/mix.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-mix-deps-${{ matrix.elixir }}-${{ matrix.otp }}-
+
+      - name: Cache _build
+        uses: actions/cache@v4
+        with:
+          path: _build
+          key: ${{ runner.os }}-mix-build-${{ matrix.elixir }}-${{ matrix.otp }}-${{ hashFiles('**/mix.lock') }}-${{ hashFiles('lib/**/*.ex', 'test/**/*.ex') }}
+          restore-keys: |
+            ${{ runner.os }}-mix-build-${{ matrix.elixir }}-${{ matrix.otp }}-${{ hashFiles('**/mix.lock') }}-
+            ${{ runner.os }}-mix-build-${{ matrix.elixir }}-${{ matrix.otp }}-
+
+      - name: Install dependencies
+        run: mix deps.get
+
+      - name: Compile dependencies
+        run: mix deps.compile
+
+      - name: Compile project (warnings as errors)
+        run: mix compile --warnings-as-errors
+
+      - name: Run tests
+        run: mix test
+
+  code-quality:
+    name: Code Quality
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Elixir
+        uses: erlef/setup-beam@v1
+        with:
+          elixir-version: "1.17.3"
+          otp-version: "27.1"
+
+      - name: Cache deps
+        uses: actions/cache@v4
+        with:
+          path: deps
+          key: ${{ runner.os }}-mix-deps-1.17.3-27.1-${{ hashFiles('**/mix.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-mix-deps-1.17.3-27.1-
+
+      - name: Cache _build
+        uses: actions/cache@v4
+        with:
+          path: _build
+          key: ${{ runner.os }}-mix-build-1.17.3-27.1-${{ hashFiles('**/mix.lock') }}-${{ hashFiles('lib/**/*.ex') }}
+          restore-keys: |
+            ${{ runner.os }}-mix-build-1.17.3-27.1-
+
+      - name: Install dependencies
+        run: mix deps.get
+
+      - name: Compile project
+        run: mix compile
+
+      - name: Check formatting
+        run: mix format --check-formatted
+
+      - name: Run Credo
+        run: mix credo --strict
+
+  dialyzer:
+    name: Dialyzer
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Elixir
+        uses: erlef/setup-beam@v1
+        id: beam
+        with:
+          elixir-version: "1.17.3"
+          otp-version: "27.1"
+
+      - name: Cache deps
+        uses: actions/cache@v4
+        with:
+          path: deps
+          key: ${{ runner.os }}-mix-deps-1.17.3-27.1-${{ hashFiles('**/mix.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-mix-deps-1.17.3-27.1-
+
+      - name: Cache _build
+        uses: actions/cache@v4
+        with:
+          path: _build
+          key: ${{ runner.os }}-mix-build-1.17.3-27.1-${{ hashFiles('**/mix.lock') }}-${{ hashFiles('lib/**/*.ex') }}
+          restore-keys: |
+            ${{ runner.os }}-mix-build-1.17.3-27.1-
+
+      - name: Cache PLT
+        uses: actions/cache@v4
+        id: plt-cache
+        with:
+          path: priv/plts
+          key: ${{ runner.os }}-plt-${{ steps.beam.outputs.elixir-version }}-${{ steps.beam.outputs.otp-version }}-${{ hashFiles('**/mix.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-plt-${{ steps.beam.outputs.elixir-version }}-${{ steps.beam.outputs.otp-version }}-
+
+      - name: Install dependencies
+        run: mix deps.get
+
+      - name: Compile project
+        run: mix compile
+
+      - name: Create PLTs directory
+        run: mkdir -p priv/plts
+
+      - name: Run Dialyzer
+        run: mix dialyzer --format github
+
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Elixir
+        uses: erlef/setup-beam@v1
+        with:
+          elixir-version: "1.17.3"
+          otp-version: "27.1"
+
+      - name: Cache deps
+        uses: actions/cache@v4
+        with:
+          path: deps
+          key: ${{ runner.os }}-mix-deps-1.17.3-27.1-${{ hashFiles('**/mix.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-mix-deps-1.17.3-27.1-
+
+      - name: Install dependencies
+        run: mix deps.get
+
+      - name: Compile project
+        run: mix compile
+
+      - name: Run Sobelow security scan
+        run: mix sobelow --config --exit
+
+  # Uncomment when you have more comprehensive tests and want coverage reporting
+  # coverage:
+  #   name: Test Coverage
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: erlef/setup-beam@v1
+  #       with:
+  #         elixir-version: "1.17.3"
+  #         otp-version: "27.1"
+  #     - run: mix deps.get
+  #     - run: mix coveralls.github
+  #       env:
+  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
