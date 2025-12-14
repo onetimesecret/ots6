@@ -1,6 +1,9 @@
 defmodule OneTimeSecretWeb.Router do
   use OneTimeSecretWeb, :router
 
+  import OneTimeSecretWeb.Plugs.SessionAuth,
+    only: [fetch_current_session: 2, require_authenticated: 2]
+
   pipeline :browser do
     plug :accepts, ["html"]
     plug :fetch_session
