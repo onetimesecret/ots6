@@ -182,178 +182,50 @@ defmodule OneTimeSecret.Crypto do
     end
   end
 
-  defp maybe_passphrase_encrypt(plaintext, nil), do: {:ok, plaintext}defmodule OneTimeSecret.Crypto do
-  @moduledoc """
-  High-level encryption API for OneTimeSecret.
+  defp maybe_passphrase_encrypt(plaintext, nil), do: {:ok, plaintext}
 
-  Provides server-side encryption (AES-256-GCM) with optional passphrase layer.
-
-  ## Encryption Flow
-
-  1. **With passphrase**: `plaintext → passphrase_encrypt → server_encrypt → store`
-  2. **Without passphrase**: `plaintext → server_encrypt → store`
-
-  ## Decryption Flow
-
-  1. **With passphrase**: `fetch → server_decrypt → passphrase_decrypt → plaintext`
-  2. **Without passphrase**: `fetch → server_decrypt → plaintext`
-
-  ## Configuration
-
-  Master encryption key must be set in config:
-
-      config :one_time_secret,
-        encryption_key: "base64-encoded-32-byte-key"
-
-  Generate a key with:
-
-      :crypto.strong_rand_bytes(32) |> Base.encode64()
-
-  """
-
-  alias OneTimeSecret.Crypto.AesGcm
-  alias OneTimeSecret.Crypto.Passphrase
-
-  @doc """
-  Encrypts plaintext with server-side encryption and optional passphrase layer.
-
-  ## Options
-
-    * `:passphrase` - Optional passphrase for additional encryption layer
-    * `:aad` - Additional authenticated data (not encrypted, but authenticated)
-
-  ## Examples
-
-      # Server-side only
-      {:ok, bundle} = Crypto.encrypt("secret data", [])
-
-      # With passphrase
-      {:ok, bundle} = Crypto.encrypt("secret data", passphrase: "hunter2")
-
-      # With AAD
-      {:ok, bundle} = Crypto.encrypt("secret data", aad: "secret-key-abc123")
-
-  Returns `{:ok, bundle}` where bundle is a map containing all encryption metadata.
-  """
-  @spec encrypt(String.t(), keyword()) :: {:ok, map()} | {:error, term()}
-  def encrypt(plaintext, opts \\ []) when is_binary(plaintext) do
-    passphrase = Keyword.get(opts, :passphrase)
-    aad = Keyword.get(opts, :aad)
-
-    with {:ok, master_key} <- get_master_key(),
-         {:ok, bundle} <- encrypt_with_layers(plaintext, master_key, passphrase, aad) do
-      {:ok, bundle}
-    end
-  end
-
-  @doc """
-  Decrypts a ciphertext bundle.
-
-  ## Options
-
-    * `:passphrase` - Required if the bundle was encrypted with a passphrase
-    * `:aad` - Must match the AAD used during encryption
-
-  ## Examples
-
-      {:ok, plaintext} = Crypto.decrypt(bundle, [])
-      {:ok, plaintext} = Crypto.decrypt(bundle, passphrase: "hunter2")
-      {:ok, plaintext} = Crypto.decrypt(bundle, aad: "secret-key-abc123")
-
-  Returns `{:ok, plaintext}` on success.
-  Returns `{:error, reason}` if decryption fails.
-  """
-  @spec decrypt(map(), keyword()) :: {:ok, String.t()} | {:error, term()}
-  def decrypt(bundle, opts \\ []) when is_map(bundle) do
-    passphrase = Keyword.get(opts, :passphrase)
-    aad = Keyword.get(opts, :aad)
-
-    with {:ok, master_key} <- get_master_key(),
-         {:ok, plaintext} <- decrypt_with_layers(bundle, master_key, passphrase, aad) do
-      {:ok, plaintext}
-    end
-  end
-
-  # Private Functions
-
-  defp encrypt_with_layers(plaintext, master_key, passphrase, aad) do
-    # Step 1: Apply passphrase layer if provided
-    {intermediate, passphrase_bundle} =
-      if passphrase do
-        case Passphrase.wrap(plaintext, passphrase) do
-          {:ok, wrapped} -> {wrapped.ciphertext, Map.take(wrapped, [:salt, :nonce, :tag])}
-          {:error, reason} -> throw({:error, reason})
-        end
-      else
-        {plaintext, nil}
-      end
-
-    # Step 2: Apply server-side encryption
-    case AesGcm.encrypt(intermediate, master_key, aad: aad) do
-      {:ok, server_bundle} ->
-        bundle = %{
-          v: 1,
-          passphrase_required: passphrase != nil,
-          passphrase_bundle: passphrase_bundle,
-          server_bundle: server_bundle
-        }
-
-        {:ok, bundle}
+  defp maybe_passphrase_encrypt(plaintext, passphrase) do
+    Passphrase.wrap(plaintext, passphrase)
+    |> case do
+      {:ok, %{ciphertext: ciphertext, salt: salt, nonce: nonce, tag: tag}} ->
+        {:ok, %{passphrase: %{salt: salt, nonce: nonce, tag: tag}, payload: ciphertext}}
 
       {:error, reason} ->
         {:error, reason}
     end
-  catch
-    {:error, reason} -> {:error, reason}
   end
 
-  defp decrypt_with_layers(bundle, master_key, passphrase, aad) do
-    # Step 1: Decrypt server layer
-    server_bundle = Map.get(bundle, :server_bundle) || bundle
+  defp maybe_passphrase_decrypt(server_decrypted, bundle, nil) do
+    if Map.get(bundle, :passphrase_protected) do
+      {:error, :passphrase_required}
+    else
+      {:ok, server_decrypted}
+    end
+  end
 
-    case AesGcm.decrypt(server_bundle, master_key, aad: aad) do
-      {:ok, intermediate} ->
-        # Step 2: Decrypt passphrase layer if required
-        if bundle[:passphrase_required] do
-          if passphrase do
-            passphrase_bundle = Map.get(bundle, :passphrase_bundle)
+  defp maybe_passphrase_decrypt(server_decrypted, bundle, passphrase) do
+    case Map.get(bundle, :passphrase_protected) do
+      true ->
+        passphrase_bundle = Map.get(bundle, :passphrase)
 
-            unless passphrase_bundle do
-              throw({:error, :missing_passphrase_bundle})
-            end
-
-            Passphrase.unwrap(intermediate, passphrase, passphrase_bundle)
-          else
-            {:error, :passphrase_required}
-          end
+        unless passphrase_bundle do
+          {:error, :missing_passphrase_metadata}
         else
-          {:ok, intermediate}
+          Passphrase.unwrap(
+            server_decrypted.payload,
+            passphrase,
+            passphrase_bundle.salt,
+            passphrase_bundle.nonce,
+            passphrase_bundle.tag
+          )
         end
 
-      {:error, reason} ->
-        {:error, reason}
-    end
-  catch
-    {:error, reason} -> {:error, reason}
-  end
+      false ->
+        {:error, :passphrase_not_required}
 
-  defp get_master_key do
-    case Application.get_env(:one_time_secret, :encryption_key) do
+      # For bundles without passphrase_protected key
       nil ->
-        {:error, :encryption_key_not_configured}
-
-      key when is_binary(key) ->
-        case Base.decode64(key) do
-          {:ok, decoded} when byte_size(decoded) == 32 ->
-            {:ok, decoded}
-
-          {:ok, _} ->
-            {:error, :encryption_key_invalid_size}
-
-          :error ->
-            {:error, :encryption_key_invalid_base64}
-        end
+        {:ok, server_decrypted}
     end
   end
 end
-
