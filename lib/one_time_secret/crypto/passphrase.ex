@@ -56,6 +56,7 @@ defmodule OneTimeSecret.Crypto.Passphrase do
       hashlen: 32,
       format: :raw_hash
     )
+    |> Base.decode16!(case: :lower)
   end
 
   @doc """
