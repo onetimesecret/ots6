@@ -25,20 +25,16 @@ defmodule OneTimeSecretWeb.Live.Hooks.RequireAuthenticated do
   def on_mount(:default, _params, session, socket) do
     session_id = session[Sessions.session_cookie_key()]
 
-    case session_id && Sessions.get_session(session_id) do
-      nil ->
-        {:halt, redirect(socket, to: "/login")}
+    case session_id && Sessions.validate_session(session_id) do
+      {:ok, db_session} ->
+        {:cont,
+         assign(socket,
+           current_account: db_session.account,
+           current_organization: db_session.active_organization
+         )}
 
-      db_session ->
-        if DateTime.compare(db_session.expires_at, DateTime.utc_now()) == :gt do
-          {:cont,
-           assign(socket,
-             current_account: db_session.account,
-             current_organization: db_session.active_organization
-           )}
-        else
-          {:halt, redirect(socket, to: "/login")}
-        end
+      {:error, _reason} ->
+        {:halt, redirect(socket, to: "/login")}
     end
   end
 end

@@ -5,7 +5,7 @@ defmodule OneTimeSecretWeb.DashboardLive.Index do
 
   @impl true
   def mount(_params, _session, socket) do
-    # current_account and current_organization come from session plug
+    # current_account and current_organization come from on_mount hook
     {:ok,
      socket
      |> assign(:page_title, "Dashboard")}
@@ -44,11 +44,8 @@ defmodule OneTimeSecretWeb.DashboardLive.Index do
                 <div class="flex justify-between items-center">
                   <span class="text-sm font-medium text-base-content/70">Verified</span>
                   <span class="text-base-content">
-                    <%= if @current_account.email_verified_at do %>
-                      <span class="badge badge-success">Yes</span>
-                    <% else %>
-                      <span class="badge badge-warning">No</span>
-                    <% end %>
+                    <span :if={@current_account.email_verified_at} class="badge badge-success">Yes</span>
+                    <span :if={!@current_account.email_verified_at} class="badge badge-warning">No</span>
                   </span>
                 </div>
               </div>
@@ -68,11 +65,8 @@ defmodule OneTimeSecretWeb.DashboardLive.Index do
                 <div class="flex justify-between items-center">
                   <span class="text-sm font-medium text-base-content/70">Type</span>
                   <span class="text-base-content">
-                    <%= if @current_organization.personal do %>
-                      <span class="badge badge-info">Personal</span>
-                    <% else %>
-                      <span class="badge badge-primary">Team</span>
-                    <% end %>
+                    <span :if={@current_organization.personal} class="badge badge-info">Personal</span>
+                    <span :if={!@current_organization.personal} class="badge badge-primary">Team</span>
                   </span>
                 </div>
               </div>
