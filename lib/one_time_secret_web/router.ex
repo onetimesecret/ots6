@@ -29,6 +29,7 @@ defmodule OneTimeSecretWeb.Router do
     live "/secrets/:key/created", SecretLive.Created
     live "/secret/:key", SecretLive.Show
 
+    live "/register", SessionLive.Register
     live "/login", SessionLive.New
     delete "/logout", SessionController, :delete
   end
