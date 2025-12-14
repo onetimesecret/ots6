@@ -1,5 +1,9 @@
 import Config
 
+# Master encryption key (32 bytes, base64-encoded)
+# Generate with: :crypto.strong_rand_bytes(32) |> Base.encode64()
+config :one_time_secret, :encryption_key, "pcaKMVVl4eBV2cYxxZsj2cE/yKBiHNI9Dkf5KNXn3Ek="
+
 # Configure your database
 config :one_time_secret, OneTimeSecret.Repo,
   database: Path.expand("../one_time_secret_dev.db", __DIR__),
