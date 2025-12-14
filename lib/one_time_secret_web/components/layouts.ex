@@ -35,40 +35,58 @@ defmodule OneTimeSecretWeb.Layouts do
 
   def app(assigns) do
     ~H"""
-    <header class="navbar px-4 sm:px-6 lg:px-8">
-      <div class="flex-1">
-        <a href="/" class="flex-1 flex w-fit items-center gap-2">
-          <img src={~p"/images/logo.svg"} width="36" />
-          <span class="text-sm font-semibold">v{Application.spec(:phoenix, :vsn)}</span>
-        </a>
-      </div>
-      <div class="flex-none">
-        <ul class="flex flex-column px-1 space-x-4 items-center">
-          <li>
-            <a href="https://phoenixframework.org/" class="btn btn-ghost">Website</a>
-          </li>
-          <li>
-            <a href="https://github.com/phoenixframework/phoenix" class="btn btn-ghost">GitHub</a>
-          </li>
-          <li>
-            <.theme_toggle />
-          </li>
-          <li>
-            <a href="https://hexdocs.pm/phoenix/overview.html" class="btn btn-primary">
-              Get Started <span aria-hidden="true">&rarr;</span>
+    <div class="flex flex-col min-h-screen">
+      <header class="border-b border-base-300 bg-base-100" role="banner">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <nav aria-label="Main navigation">
+            <a href="/" class="inline-flex items-center gap-3 hover:opacity-80 transition-opacity">
+              <svg
+                width="32"
+                height="32"
+                viewBox="0 0 100 100"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true"
+              >
+                <circle cx="50" cy="50" r="45" fill="currentColor" class="text-primary" />
+                <path
+                  d="M50 20 L65 40 L50 35 L35 40 Z"
+                  fill="currentColor"
+                  class="text-primary-content"
+                />
+                <rect
+                  x="45"
+                  y="40"
+                  width="10"
+                  height="40"
+                  fill="currentColor"
+                  class="text-primary-content"
+                />
+                <circle cx="50" cy="65" r="8" fill="currentColor" class="text-base-100" />
+              </svg>
+              <span class="text-xl font-semibold text-base-content">OneTimeSecret</span>
             </a>
-          </li>
-        </ul>
-      </div>
-    </header>
+          </nav>
+        </div>
+      </header>
 
-    <main class="px-4 py-20 sm:px-6 lg:px-8">
-      <div class="mx-auto max-w-2xl space-y-4">
+      <main class="flex-1 px-4 py-8 sm:px-6 lg:px-8" role="main" id="main-content" tabindex="-1">
         {render_slot(@inner_block)}
-      </div>
-    </main>
+      </main>
 
-    <.flash_group flash={@flash} />
+      <footer class="border-t border-base-300 bg-base-100 mt-auto" role="contentinfo">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
+            <p class="text-sm text-base-content/70">
+              © 2024 OneTimeSecret. Share secrets securely.
+            </p>
+            <.theme_toggle />
+          </div>
+        </div>
+      </footer>
+
+      <.flash_group flash={@flash} />
+    </div>
     """
   end
 
@@ -84,7 +102,7 @@ defmodule OneTimeSecretWeb.Layouts do
 
   def flash_group(assigns) do
     ~H"""
-    <div id={@id} aria-live="polite">
+    <div id={@id} aria-live="polite" aria-atomic="true">
       <.flash kind={:info} flash={@flash} />
       <.flash kind={:error} flash={@flash} />
 
@@ -122,29 +140,57 @@ defmodule OneTimeSecretWeb.Layouts do
   """
   def theme_toggle(assigns) do
     ~H"""
-    <div class="card relative flex flex-row items-center border-2 border-base-300 bg-base-300 rounded-full">
-      <div class="absolute w-1/3 h-full rounded-full border-1 border-base-200 bg-base-100 brightness-200 left-0 [[data-theme=light]_&]:left-1/3 [[data-theme=dark]_&]:left-2/3 transition-[left]" />
-
-      <button
-        phx-click={JS.dispatch("phx:set-theme", detail: %{theme: "system"})}
-        class="flex p-2 cursor-pointer w-1/3"
+    <div class="flex items-center gap-2" role="group" aria-label="Theme selector">
+      <span class="text-sm text-base-content/70" id="theme-label">Theme:</span>
+      <div
+        class="btn-group"
+        role="radiogroup"
+        aria-labelledby="theme-label"
       >
-        <.icon name="hero-computer-desktop-micro" class="size-4 opacity-75 hover:opacity-100" />
-      </button>
+        <button
+          type="button"
+          phx-click={JS.dispatch("phx:set-theme", detail: %{theme: "light"})}
+          class="btn btn-sm btn-ghost"
+          aria-label="Light theme"
+          role="radio"
+          aria-checked="false"
+        >
+          <.icon name="hero-sun" class="size-4" />
+        </button>
 
-      <button
-        phx-click={JS.dispatch("phx:set-theme", detail: %{theme: "light"})}
-        class="flex p-2 cursor-pointer w-1/3"
-      >
-        <.icon name="hero-sun-micro" class="size-4 opacity-75 hover:opacity-100" />
-      </button>
+        <button
+          type="button"
+          phx-click={JS.dispatch("phx:set-theme", detail: %{theme: "dark"})}
+          class="btn btn-sm btn-ghost"
+          aria-label="Dark theme"
+          role="radio"
+          aria-checked="false"
+        >
+          <.icon name="hero-moon" class="size-4" />
+        </button>
 
-      <button
-        phx-click={JS.dispatch("phx:set-theme", detail: %{theme: "dark"})}
-        class="flex p-2 cursor-pointer w-1/3"
-      >
-        <.icon name="hero-moon-micro" class="size-4 opacity-75 hover:opacity-100" />
-      </button>
+        <button
+          type="button"
+          phx-click={JS.dispatch("phx:set-theme", detail: %{theme: "high-contrast"})}
+          class="btn btn-sm btn-ghost"
+          aria-label="High contrast theme"
+          role="radio"
+          aria-checked="false"
+        >
+          <.icon name="hero-eye" class="size-4" />
+        </button>
+
+        <button
+          type="button"
+          phx-click={JS.dispatch("phx:set-theme", detail: %{theme: "smooth-jazz"})}
+          class="btn btn-sm btn-ghost"
+          aria-label="Smooth jazz theme"
+          role="radio"
+          aria-checked="false"
+        >
+          <.icon name="hero-musical-note" class="size-4" />
+        </button>
+      </div>
     </div>
     """
   end
