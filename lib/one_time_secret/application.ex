@@ -10,6 +10,7 @@ defmodule OneTimeSecret.Application do
     children = [
       OneTimeSecretWeb.Telemetry,
       OneTimeSecret.Repo,
+      {Redix, host: "localhost", name: :redix},
       {Ecto.Migrator,
        repos: Application.fetch_env!(:one_time_secret, :ecto_repos), skip: skip_migrations?()},
       {DNSCluster, query: Application.get_env(:one_time_secret, :dns_cluster_query) || :ignore},
