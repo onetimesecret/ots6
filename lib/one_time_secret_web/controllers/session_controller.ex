@@ -11,27 +11,25 @@ defmodule OneTimeSecretWeb.SessionController do
   record and redirects here with the session ID in the query params.
   """
   def activate(conn, %{"id" => session_id}) do
-    case Sessions.get_session(session_id) do
-      {:ok, session} ->
-        # Validate session isn't expired
-        case Sessions.validate_session(session) do
-          {:ok, _session} ->
-            conn
-            |> SessionAuth.put_session_cookie(session_id)
-            |> put_flash(:info, "Welcome back!")
-            |> redirect(to: ~p"/dashboard")
+    session = Sessions.get_session!(session_id)
 
-          {:error, :expired} ->
-            conn
-            |> put_flash(:error, "Session expired. Please log in again.")
-            |> redirect(to: ~p"/login")
-        end
-
-      {:error, _reason} ->
+    case Sessions.validate_session(session) do
+      {:ok, _session} ->
         conn
-        |> put_flash(:error, "Invalid session. Please log in again.")
+        |> SessionAuth.put_session_cookie(session_id)
+        |> put_flash(:info, "Welcome back!")
+        |> redirect(to: ~p"/dashboard")
+
+      {:error, :expired} ->
+        conn
+        |> put_flash(:error, "Session expired. Please log in again.")
         |> redirect(to: ~p"/login")
     end
+  rescue
+    Ecto.NoResultsError ->
+      conn
+      |> put_flash(:error, "Invalid session. Please log in again.")
+      |> redirect(to: ~p"/login")
   end
 
   @doc """
@@ -44,9 +42,11 @@ defmodule OneTimeSecretWeb.SessionController do
 
     if session_id do
       # Try to terminate the session (ignore errors if already gone)
-      case Sessions.get_session(session_id) do
-        {:ok, session} -> Sessions.terminate_session(session)
-        {:error, _} -> :ok
+      try do
+        session = Sessions.get_session!(session_id)
+        Sessions.terminate_session(session)
+      rescue
+        Ecto.NoResultsError -> :ok
       end
     end
 
