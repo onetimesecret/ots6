@@ -27,6 +27,9 @@ defmodule OneTimeSecretWeb.SessionLive.New do
      |> assign(:authenticating, false)
      |> assign(:ip_address, ip_address)
      |> assign(:user_agent, user_agent)}
+  end
+
+  # Added the missing 'end' here
 
   @impl true
   def handle_event("validate", %{"login" => login_params}, socket) do
