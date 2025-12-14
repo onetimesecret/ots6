@@ -29,7 +29,7 @@ defmodule OneTimeSecretWeb.SessionLive.New do
      |> assign(:user_agent, user_agent)}
   end
 
-  # Added the missing 'end' here
+  # <-- The missing 'end' goes here
 
   @impl true
   def handle_event("validate", %{"login" => login_params}, socket) do
