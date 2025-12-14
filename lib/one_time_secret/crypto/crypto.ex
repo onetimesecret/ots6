@@ -62,7 +62,7 @@ defmodule OneTimeSecret.Crypto do
     passphrase = Keyword.get(opts, :passphrase)
     aad = Keyword.get(opts, :aad, "")
 
-    with {:ok, payload} <- maybe_passphrase_encrypt(plaintext, passphrase),
+    with {:ok, {payload, passphrase_meta}} <- maybe_passphrase_encrypt(plaintext, passphrase),
          {:ok, server_encrypted} <- AesGcm.encrypt(payload, master_key, aad) do
       bundle = %{
         v: 1,
@@ -70,8 +70,10 @@ defmodule OneTimeSecret.Crypto do
       }
 
       bundle =
-        if passphrase do
-          Map.put(bundle, :passphrase_protected, true)
+        if passphrase_meta do
+          bundle
+          |> Map.put(:passphrase_protected, true)
+          |> Map.put(:passphrase, passphrase_meta)
         else
           bundle
         end
@@ -182,13 +184,13 @@ defmodule OneTimeSecret.Crypto do
     end
   end
 
-  defp maybe_passphrase_encrypt(plaintext, nil), do: {:ok, plaintext}
+  defp maybe_passphrase_encrypt(plaintext, nil), do: {:ok, {plaintext, nil}}
 
   defp maybe_passphrase_encrypt(plaintext, passphrase) do
-    Passphrase.wrap(plaintext, passphrase)
-    |> case do
+    case Passphrase.wrap(plaintext, passphrase) do
       {:ok, %{ciphertext: ciphertext, salt: salt, nonce: nonce, tag: tag}} ->
-        {:ok, %{passphrase: %{salt: salt, nonce: nonce, tag: tag}, payload: ciphertext}}
+        passphrase_meta = %{salt: salt, nonce: nonce, tag: tag}
+        {:ok, {ciphertext, passphrase_meta}}
 
       {:error, reason} ->
         {:error, reason}
@@ -206,17 +208,17 @@ defmodule OneTimeSecret.Crypto do
   defp maybe_passphrase_decrypt(server_decrypted, bundle, passphrase) do
     case Map.get(bundle, :passphrase_protected) do
       true ->
-        passphrase_bundle = Map.get(bundle, :passphrase)
+        passphrase_meta = Map.get(bundle, :passphrase)
 
-        unless passphrase_bundle do
+        unless passphrase_meta do
           {:error, :missing_passphrase_metadata}
         else
           Passphrase.unwrap(
-            server_decrypted.payload,
+            server_decrypted,
             passphrase,
-            passphrase_bundle.salt,
-            passphrase_bundle.nonce,
-            passphrase_bundle.tag
+            passphrase_meta.salt,
+            passphrase_meta.nonce,
+            passphrase_meta.tag
           )
         end
 
