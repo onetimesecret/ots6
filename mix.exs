@@ -1,3 +1,6 @@
+==> argon2_elixir
+mkdir -p /workspace/one_time_secret/_build/dev/lib/argon2_elixir/priv
+cc -g -O3 -pthread -Wall -I"/root/.asdf/installs/erlang/27.3.3/erts-15.2.6/include" -Iargon2/include -Iargon2/src -Ic_src -shared -fPIC -fvisibility=hidden -Wl,-soname,libargon2.so.0 argon2/src/argon2.c argon2/src/core.c argon2/src/blake2/blake2b.c argon2/src/thread.c argon2/src/encoding.c argon2/src/ref.c c_src/argon2_nif.c -o /workspace/one_time_secret/_build/dev/lib/argon2_elixir/priv/argon2_nif.so
 defmodule OneTimeSecret.MixProject do
   use Mix.Project
 
@@ -60,7 +63,7 @@ defmodule OneTimeSecret.MixProject do
       {:dns_cluster, "~> 0.2.0"},
       # Added missing comma here
       {:bandit, "~> 1.5"},
-      {:bcrypt_elixir, "~> 3.0"}
+      {:argon2_elixir, "~> 4.0"}
     ]
   end
 
