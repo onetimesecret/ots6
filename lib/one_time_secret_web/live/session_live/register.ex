@@ -46,7 +46,7 @@ defmodule OneTimeSecretWeb.SessionLive.Register do
          |> put_flash(:info, "Account created! Please log in to continue.")
          |> push_navigate(to: ~p"/login")}
 
-      {:error, :account, changeset, _changes} ->
+      {:error, :account, changeset} ->
         # Extract first error message from changeset
         error_message =
           case changeset.errors do
@@ -60,7 +60,7 @@ defmodule OneTimeSecretWeb.SessionLive.Register do
          |> assign(:registering, false)
          |> assign(:error, error_message)}
 
-      {:error, _step, _changeset, _changes} ->
+      {:error, _step, _changeset} ->
         {:noreply,
          socket
          |> assign(:registering, false)
