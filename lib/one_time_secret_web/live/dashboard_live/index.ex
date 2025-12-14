@@ -1,6 +1,8 @@
 defmodule OneTimeSecretWeb.DashboardLive.Index do
   use OneTimeSecretWeb, :live_view
 
+  on_mount OneTimeSecretWeb.Live.Hooks.RequireAuthenticated
+
   @impl true
   def mount(_params, _session, socket) do
     # current_account and current_organization come from session plug
