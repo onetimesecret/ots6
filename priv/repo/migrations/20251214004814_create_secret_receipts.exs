@@ -29,9 +29,5 @@ defmodule OneTimeSecret.Repo.Migrations.CreateSecretReceipts do
     create index(:secret_receipts, [:recipient_id])
     create index(:secret_receipts, [:revealed_at])
     create index(:secret_receipts, [:receipt_expires_at])
-
-    # BRIN index for time-series queries on inserted_at
-    execute "CREATE INDEX secret_receipts_inserted_at_brin_idx ON secret_receipts USING BRIN (inserted_at)",
-            "DROP INDEX secret_receipts_inserted_at_brin_idx"
   end
 end
