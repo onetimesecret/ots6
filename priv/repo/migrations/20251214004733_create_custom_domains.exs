@@ -14,6 +14,19 @@ defmodule OneTimeSecret.Repo.Migrations.CreateCustomDomains do
       add :primary_color, :string
       add :custom_css, :text
 
+      # Extended branding
+      add :colour, :string
+      add :instructions_pre_reveal, :string
+      add :instructions_reveal, :string
+      add :instructions_post_reveal, :string
+      add :description, :string
+      add :button_text_light, :string
+      add :allow_public_homepage, :boolean, null: false, default: false
+      add :allow_public_api, :boolean, null: false, default: false
+      add :font_family, :string
+      add :corner_style, :string
+      add :locale, :string
+
       # Mode settings
       add :public_homepage, :boolean, null: false, default: false
       add :anonymous_create, :boolean, null: false, default: false
