@@ -16,6 +16,19 @@ defmodule OneTimeSecret.CustomDomains.CustomDomain do
     field :primary_color, :string
     field :custom_css, :string
 
+    # Extended branding
+    field :colour, :string
+    field :instructions_pre_reveal, :string
+    field :instructions_reveal, :string
+    field :instructions_post_reveal, :string
+    field :description, :string
+    field :button_text_light, :string
+    field :allow_public_homepage, :boolean, default: false
+    field :allow_public_api, :boolean, default: false
+    field :font_family, :string
+    field :corner_style, :string
+    field :locale, :string
+
     # Mode settings
     field :public_homepage, :boolean, default: false
     field :anonymous_create, :boolean, default: false
@@ -66,7 +79,23 @@ defmodule OneTimeSecret.CustomDomains.CustomDomain do
   """
   def branding_changeset(custom_domain, attrs) do
     custom_domain
-    |> cast(attrs, [:brand_name, :logo_url, :primary_color, :custom_css])
+    |> cast(attrs, [
+      :brand_name,
+      :logo_url,
+      :primary_color,
+      :custom_css,
+      :colour,
+      :instructions_pre_reveal,
+      :instructions_reveal,
+      :instructions_post_reveal,
+      :description,
+      :button_text_light,
+      :allow_public_homepage,
+      :allow_public_api,
+      :font_family,
+      :corner_style,
+      :locale
+    ])
     |> validate_length(:brand_name, max: 100)
     |> validate_length(:logo_url, max: 500)
     |> validate_format(:primary_color, ~r/^#[0-9a-fA-F]{6}$/,
