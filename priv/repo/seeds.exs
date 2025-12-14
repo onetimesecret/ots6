@@ -84,7 +84,7 @@ alias OneTimeSecret.Plans.Plan
   max_secret_size_bytes: 10_485_760,
   max_ttl_seconds: 31_536_000,
   max_secrets_per_day: nil,
-  max_custom_domains: nil,
+  max_custom_domains: -1,
   max_members: nil,
   custom_branding: true,
   member_auth_on_custom_domain: true,
