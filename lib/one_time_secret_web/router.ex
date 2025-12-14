@@ -34,7 +34,7 @@ defmodule OneTimeSecretWeb.Router do
   end
 
   scope "/", OneTimeSecretWeb do
-    pipe_through :authenticated
+    pipe_through [:browser, :authenticated]
 
     live "/dashboard", DashboardLive.Index
   end
