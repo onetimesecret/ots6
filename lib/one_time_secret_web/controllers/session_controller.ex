@@ -40,7 +40,7 @@ defmodule OneTimeSecretWeb.SessionController do
   Removes the session record from the database and clears the cookie.
   """
   def delete(conn, _params) do
-    session_id = SessionAuth.session_cookie_key() |> then(&get_session(conn, &1))
+    session_id = get_session(conn, "_one_time_secret_session_id")
 
     if session_id do
       # Try to terminate the session (ignore errors if already gone)
