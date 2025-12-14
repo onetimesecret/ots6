@@ -39,13 +39,13 @@ defmodule OneTimeSecret.Application do
     # By default, sqlite migrations are run when using a release
     System.get_env("RELEASE_NAME") == nil
   end
-end
 
-defp redis_config do
-  [
-    name: :redix,
-    host: Application.get_env(:one_time_secret, :redis_host, "localhost"),
-    port: Application.get_env(:one_time_secret, :redis_port, 6379),
-    database: Application.get_env(:one_time_secret, :redis_database, 0)
-  ]
+  defp redis_config do
+    [
+      name: :redix,
+      host: Application.get_env(:one_time_secret, :redis_host, "localhost"),
+      port: Application.get_env(:one_time_secret, :redis_port, 6379),
+      database: Application.get_env(:one_time_secret, :redis_database, 0)
+    ]
+  end
 end
