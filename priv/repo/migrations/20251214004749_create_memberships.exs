@@ -14,7 +14,7 @@ defmodule OneTimeSecret.Repo.Migrations.CreateMemberships do
       add :organization_id, references(:organizations, type: :binary_id, on_delete: :delete_all),
         null: false
 
-      add :domain_scope_id, references(:custom_domains, type: :binary_id, on_delete: :set_null)
+      add :domain_scope_id, references(:custom_domains, type: :binary_id, on_delete: :nilify_all)
 
       timestamps(type: :utc_datetime_usec)
     end
