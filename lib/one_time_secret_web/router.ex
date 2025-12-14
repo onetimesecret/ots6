@@ -17,7 +17,9 @@ defmodule OneTimeSecretWeb.Router do
   scope "/", OneTimeSecretWeb do
     pipe_through :browser
 
-    get "/", PageController, :home
+    live "/", SecretLive.New
+    live "/secrets/:key/created", SecretLive.Created
+    live "/secret/:key", SecretLive.Show
   end
 
   # Other scopes may use custom stacks.
