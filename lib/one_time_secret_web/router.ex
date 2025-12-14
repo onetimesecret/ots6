@@ -10,6 +10,12 @@ defmodule OneTimeSecretWeb.Router do
     plug :put_secure_browser_headers
   end
 
+  pipeline :authenticated do
+    plug :browser
+    plug OneTimeSecretWeb.Plugs.SessionAuth, :fetch_current_session
+    plug OneTimeSecretWeb.Plugs.SessionAuth, :require_authenticated
+  end
+
   pipeline :api do
     plug :accepts, ["json"]
   end
@@ -20,6 +26,15 @@ defmodule OneTimeSecretWeb.Router do
     live "/", SecretLive.New
     live "/secrets/:key/created", SecretLive.Created
     live "/secret/:key", SecretLive.Show
+
+    live "/login", SessionLive.New
+    delete "/logout", SessionController, :delete
+  end
+
+  scope "/", OneTimeSecretWeb do
+    pipe_through :authenticated
+
+    live "/dashboard", DashboardLive.Index
   end
 
   # Other scopes may use custom stacks.
