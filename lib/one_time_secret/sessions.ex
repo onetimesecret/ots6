@@ -192,21 +192,6 @@ defmodule OneTimeSecret.Sessions do
     Repo.delete(session)
   end
 
-  @doc """
-  Terminates a session by ID.
-
-  Returns `{:ok, session}` if found and deleted.
-  Returns `{:error, :not_found}` if session doesn't exist.
-
-  ## Examples
-
-      iex> terminate_session(session_id)
-      {:ok, %Session{}}
-
-      iex> terminate_session("nonexistent")
-      {:error, :not_found}
-
-  """
   def terminate_session(session_id) when is_binary(session_id) do
     case get_session(session_id) do
       nil -> {:error, :not_found}
@@ -214,19 +199,6 @@ defmodule OneTimeSecret.Sessions do
     end
   end
 
-  @doc """
-  Cleans up expired sessions from the database.
-
-  Deletes all sessions where `expires_at` is in the past.
-
-  Returns the number of sessions deleted.
-
-  ## Examples
-
-      iex> cleanup_expired_sessions()
-      {5, nil}
-
-  """
   def cleanup_expired_sessions do
     now = DateTime.utc_now()
 
