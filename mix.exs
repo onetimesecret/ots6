@@ -59,6 +59,7 @@ defmodule OneTimeSecret.MixProject do
       {:jason, "~> 1.2"},
       {:dns_cluster, "~> 0.2.0"},
       {:bandit, "~> 1.5"}
+      {:bcrypt_elixir, "~> 3.0"}
     ]
   end
 
