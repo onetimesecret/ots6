@@ -49,7 +49,13 @@ defmodule OneTimeSecret.Crypto.Passphrase do
   """
   @spec derive_key(String.t(), binary()) :: binary()
   def derive_key(passphrase, salt) when is_binary(passphrase) and byte_size(salt) == 16 do
-    Argon2.hash_pwd_salt(passphrase,
+    Argon2.Base.hash_password(passphrase, salt, [
+      t_cost: 3,
+      m_cost: 16,
+      parallelism: 4,
+      hashlen: 32,
+      format: :raw_hash
+    ])
       salt: salt,
       t_cost: 3,
       m_cost: 16,
