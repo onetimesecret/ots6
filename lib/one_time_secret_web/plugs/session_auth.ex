@@ -23,6 +23,17 @@ defmodule OneTimeSecretWeb.Plugs.SessionAuth do
   """
 
   import Plug.Conn
+
+  @behaviour Plug
+
+  @impl Plug
+  def init(opts), do: opts
+
+  @impl Plug
+  def call(conn, _opts) do
+    fetch_current_session(conn, [])
+  end
+
   import Phoenix.Controller
 
   alias OneTimeSecret.Sessions
