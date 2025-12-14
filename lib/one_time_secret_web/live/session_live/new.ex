@@ -9,13 +9,24 @@ defmodule OneTimeSecretWeb.SessionLive.New do
   def mount(_params, _session, socket) do
     form = to_form(%{"email" => "", "password" => ""})
 
+    # Store connection metadata for session creation
+    user_agent = get_connect_info(socket, :user_agent)
+    peer_data = get_connect_info(socket, :peer_data)
+
+    ip_address =
+      case peer_data do
+        %{address: address} -> ip_to_string(address)
+        _ -> nil
+      end
+
     {:ok,
      socket
      |> assign(:page_title, "Log In")
      |> assign(:form, form)
      |> assign(:error, nil)
-     |> assign(:authenticating, false)}
-  end
+     |> assign(:authenticating, false)
+     |> assign(:ip_address, ip_address)
+     |> assign(:user_agent, user_agent)}
 
   @impl true
   def handle_event("validate", %{"login" => login_params}, socket) do
@@ -30,18 +41,10 @@ defmodule OneTimeSecretWeb.SessionLive.New do
     case Accounts.authenticate_account(email, password) do
       {:ok, account} ->
         # Get client metadata for session
-        user_agent = get_connect_info(socket, :user_agent)
-        peer_data = get_connect_info(socket, :peer_data)
-
-        ip_address =
-          case peer_data do
-            %{address: address} -> ip_to_string(address)
-            _ -> nil
-          end
 
         session_attrs = %{
-          ip_address: ip_address,
-          user_agent: user_agent
+          ip_address: socket.assigns.ip_address,
+          user_agent: socket.assigns.user_agent
         }
 
         case Sessions.create_session(account, session_attrs) do
