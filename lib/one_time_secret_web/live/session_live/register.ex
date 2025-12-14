@@ -2,31 +2,25 @@ defmodule OneTimeSecretWeb.SessionLive.Register do
   use OneTimeSecretWeb, :live_view
 
   alias OneTimeSecret.Organizations
-  alias OneTimeSecret.Sessions
-  alias OneTimeSecretWeb.Plugs.SessionAuth
+  # Removed: alias OneTimeSecret.Sessions
+  # Removed: alias OneTimeSecretWeb.Plugs.SessionAuth
 
   @impl true
   def mount(_params, _session, socket) do
-    # Get client metadata during mount
-    user_agent = get_connect_info(socket, :user_agent)
-    peer_data = get_connect_info(socket, :peer_data)
-
-    ip_address =
-      case peer_data do
-        %{address: address} -> ip_to_string(address)
-        _ -> nil
-      end
+    # Removed: client metadata collection as it's no longer used for session creation here
 
     form = to_form(%{"email" => "", "password" => ""})
 
-    {:ok,
-     socket
-     |> assign(:page_title, "Sign Up")
-     |> assign(:form, form)
-     |> assign(:error, nil)
-     |> assign(:registering, false)
-     |> assign(:user_agent, user_agent)
-     |> assign(:ip_address, ip_address)}
+    {
+      :ok,
+      socket
+      |> assign(:page_title, "Sign Up")
+      |> assign(:form, form)
+      |> assign(:error, nil)
+      |> assign(:registering, false)
+      # Removed: |> assign(:user_agent, user_agent)
+      # Removed: |> assign(:ip_address, ip_address)
+    }
   end
 
   @impl true
@@ -45,30 +39,15 @@ defmodule OneTimeSecretWeb.SessionLive.Register do
     }
 
     case Organizations.register_account_with_personal_org(attrs) do
-      {:ok, result} ->
-        # Account created with personal org - now create session
-        session_attrs = %{
-          ip_address: socket.assigns.ip_address,
-          user_agent: socket.assigns.user_agent
-        }
-
-        case Sessions.create_session(result.account, session_attrs) do
-          {:ok, session} ->
-            {:noreply,
-             socket
-             |> put_flash(:info, "Welcome to OneTimeSecret, #{email}!")
-             |> SessionAuth.put_session_cookie(session.id)
-             |> push_navigate(to: ~p"/dashboard")}
-
-          {:error, _} ->
-            {:noreply,
-             socket
-             |> assign(:registering, false)
-             |> assign(:error, "Account created but failed to log you in. Please try logging in.")}
-        end
+      {:ok, _result} ->
+        # Account created with personal org - now redirect to login page
+        {:noreply,
+         socket
+         |> put_flash(:info, "Account created! Please log in to continue.")
+         |> push_navigate(to: ~p"/login")}
 
       {:error, :account, changeset, _changes} ->
-        # Extract first error message
+        # Extract first error message from changeset
         error_message =
           case changeset.errors do
             [{:email, {msg, _}} | _] -> "Email #{msg}"
@@ -183,12 +162,5 @@ defmodule OneTimeSecretWeb.SessionLive.Register do
     """
   end
 
-  # Private Helpers
-
-  defp ip_to_string({a, b, c, d}), do: "#{a}.#{b}.#{c}.#{d}"
-
-  defp ip_to_string({a, b, c, d, e, f, g, h}),
-    do: "#{a}:#{b}:#{c}:#{d}:#{e}:#{f}:#{g}:#{h}"
-
-  defp ip_to_string(_), do: nil
+  # Removed: Private Helpers (ip_to_string)
 end
