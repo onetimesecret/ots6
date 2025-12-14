@@ -156,7 +156,7 @@ defmodule OneTimeSecretWeb.Layouts do
       >
         <button
           type="button"
-          phx-click={JS.dispatch("phx:set-theme", detail: %{theme: "light"})}
+          phx-click={JS.dispatch("phx:set-theme", detail: %{theme: "light"}, bubbles: true)}
           class="btn btn-sm btn-ghost"
           aria-label="Light theme"
           role="radio"
@@ -167,7 +167,7 @@ defmodule OneTimeSecretWeb.Layouts do
 
         <button
           type="button"
-          phx-click={JS.dispatch("phx:set-theme", detail: %{theme: "dark"})}
+          phx-click={JS.dispatch("phx:set-theme", detail: %{theme: "dark"}, bubbles: true)}
           class="btn btn-sm btn-ghost"
           aria-label="Dark theme"
           role="radio"
@@ -178,7 +178,7 @@ defmodule OneTimeSecretWeb.Layouts do
 
         <button
           type="button"
-          phx-click={JS.dispatch("phx:set-theme", detail: %{theme: "high-contrast"})}
+          phx-click={JS.dispatch("phx:set-theme", detail: %{theme: "high-contrast"}, bubbles: true)}
           class="btn btn-sm btn-ghost"
           aria-label="High contrast theme"
           role="radio"
@@ -189,7 +189,7 @@ defmodule OneTimeSecretWeb.Layouts do
 
         <button
           type="button"
-          phx-click={JS.dispatch("phx:set-theme", detail: %{theme: "smooth-jazz"})}
+          phx-click={JS.dispatch("phx:set-theme", detail: %{theme: "smooth-jazz"}, bubbles: true)}
           class="btn btn-sm btn-ghost"
           aria-label="Smooth jazz theme"
           role="radio"
