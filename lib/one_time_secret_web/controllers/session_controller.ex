@@ -13,17 +13,20 @@ defmodule OneTimeSecretWeb.SessionController do
   def activate(conn, %{"id" => session_id}) do
     session = Sessions.get_session!(session_id)
 
-    case Sessions.validate_session(session) do
-      {:ok, _session} ->
-        conn
-        |> SessionAuth.put_session_cookie(session_id)
-        |> put_flash(:info, "Welcome back!")
-        |> redirect(to: ~p"/dashboard")
+    # Check if session is expired
+    now = DateTime.utc_now()
 
-      {:error, :expired} ->
-        conn
-        |> put_flash(:error, "Session expired. Please log in again.")
-        |> redirect(to: ~p"/login")
+    if DateTime.compare(session.expires_at, now) == :gt do
+      # Session valid - set cookie and redirect
+      conn
+      |> SessionAuth.put_session_cookie(session_id)
+      |> put_flash(:info, "Welcome back!")
+      |> redirect(to: ~p"/dashboard")
+    else
+      # Session expired
+      conn
+      |> put_flash(:error, "Session expired. Please log in again.")
+      |> redirect(to: ~p"/login")
     end
   rescue
     Ecto.NoResultsError ->
