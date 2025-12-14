@@ -118,7 +118,7 @@ defmodule OneTimeSecret.Secrets do
     with {:ok, redis_data} <- fetch_from_redis(key),
          {:ok, plaintext} <- decrypt_value(redis_data, opts),
          {:ok, _} <- delete_from_redis(key),
-         {:ok, receipt} <- update_receipt_revealed(key, opts),
+         {:ok, _receipt} <- update_receipt_revealed(key, opts),
          {:ok, _} <- remove_from_timeline(redis_data["organization_id"], key) do
       {:ok, plaintext}
     else
