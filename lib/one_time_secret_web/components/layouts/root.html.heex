@@ -13,6 +13,18 @@
     <script>
       (() => {
         const setTheme = (theme) => {
+          document.documentElement.setAttribute("data-theme", theme);
+          localStorage.setItem("ots:theme", theme);
+        };
+
+        // Load saved theme or default to light
+        const savedTheme = localStorage.getItem("ots:theme") || "light";
+        setTheme(savedTheme);
+
+        // Listen for theme change events from LiveView
+        window.addEventListener("phx:set-theme", ({ detail: { theme } }) => {
+          setTheme(theme);
+        });
           if (theme === "system") {
             localStorage.removeItem("phx:theme");
             document.documentElement.removeAttribute("data-theme");
@@ -21,11 +33,7 @@
             document.documentElement.setAttribute("data-theme", theme);
           }
         };
-        if (!document.documentElement.hasAttribute("data-theme")) {
-          setTheme(localStorage.getItem("phx:theme") || "system");
         }
-        window.addEventListener("storage", (e) => e.key === "phx:theme" && setTheme(e.newValue || "system"));
-        window.addEventListener("phx:set-theme", ({ detail: { theme } }) => setTheme(theme));
       })();
     </script>
   </head>
